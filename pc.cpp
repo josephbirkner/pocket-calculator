@@ -159,5 +159,12 @@ private:
 
 int main()
 {
-    cout << (double) expression_evaluator("-(1+1+1)--1") << endl;
+    for(;;) {
+        cout << "> ";
+        string expression;
+        cin >> expression;
+        if(expression == "q")
+            break;
+        cout << (double) expression_evaluator(expression) << endl;
+    }
 }
