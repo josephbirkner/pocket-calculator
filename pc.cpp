@@ -4,7 +4,7 @@
 using namespace std;
 
 struct expected_char_exception {char expected;};
-struct unexpected_char_exception {char expected;};
+struct unexpected_char_exception {char unexpected;};
 struct expected_end_exception {int pos;};
 
 /**
@@ -26,38 +26,28 @@ public:
     }
     
     bool maybe_expect(char const& expected) {
-        if(pos >= word.size() - 1)
+        if(word[pos] != expected)
             return false;
-            
-        if(word[pos] == expected) {
+
+        if(!at_end())
             advance(pos);
-            return true;
-        }
-        else
-            return false;
+
+        return true;
     }
     
     void expect(char const& expected) {
-        if(pos >= word.size() - 1)
+        if(word[pos] != expected)
             throw expected_char_exception{expected};
-            
-        if(word[pos] == expected)
+
+        if(!at_end())
             advance(pos);
-        else
-            throw expected_char_exception{expected};
     }
     
     void expect_end() {
         if(!at_end())
             throw expected_end_exception{pos};
     }
-    
-    inline char const& next() const {
-        int next_pos = pos;
-        advance(next_pos);
-        return word[next_pos];
-    }
-    
+
     inline char const& current() const {
         return word[pos];
     }
@@ -70,7 +60,10 @@ public:
 /**
  * Expression evaluator that parses a string and evaluates
  * it as a mathematical expression according to this grammar:
- * - 
+ *  expression := sum
+ *  sum        := product {(+|-) product}
+ *  product    := term {(*|/) term}
+ *  term       := (+|-) term | {[0-9]} | \(sum\)
  */
 class expression_evaluator : public parser
 {
@@ -159,12 +152,27 @@ private:
 
 int main()
 {
+    cout << "You're the operator with the pocket calculator! Type q to quit." << endl;
+
     for(;;) {
-        cout << "> ";
+        cout << "\n> ";
         string expression;
-        cin >> expression;
+        getline(cin, expression);
         if(expression == "q")
             break;
-        cout << (double) expression_evaluator(expression) << endl;
+
+        try {
+            cout << (double) expression_evaluator(expression) << endl;
+        }
+        catch(expected_char_exception const& e) {
+            cout << "error: expected '" << e.expected << "'" << endl;
+        }
+        catch(unexpected_char_exception const& e) {
+            cout << "error: unexpected '" << e.unexpected << "'" << endl;
+        }
+        catch(expected_end_exception const& e) {
+            cout << "error: expected end of string" << endl;
+        }
+
     }
 }
